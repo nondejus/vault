@@ -16,7 +16,7 @@ var _ cli.CommandAutocomplete = (*MonitorCommand)(nil)
 type MonitorCommand struct {
 	*BaseCommand
 
-	flagLogLevel string
+	logLevel string
 }
 
 func (c *MonitorCommand) Synopsis() string {
@@ -37,17 +37,17 @@ Usage: vault monitor [options]
 }
 
 func (c *MonitorCommand) Flags() *FlagSets {
-	set := c.flagSet(FlagSetNone)
+	set := c.flagSet(FlagSetHTTP)
 
 	f := set.NewFlagSet("Monitor Options")
 	f.StringVar(&StringVar{
 		Name:       "log-level",
-		Target:     &c.flagLogLevel,
-		Default:    "info",
-		Completion: complete.PredictSet("trace", "debug", "info", "warn", "error"),
+		Target:     &c.logLevel,
+		Default:    "INFO",
+		Completion: complete.PredictSet("TRACE", "DEBUG", "INFO", "WARN", "ERROR"),
 		Usage: "If passed, the log level to monitor logs. Supported values" +
-			"(in order of detail) are \"trace\", \"debug\", \"info\", \"warn\"" +
-			" and \"error\".",
+			"(in order of detail) are \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\"" +
+			" and \"ERROR\".",
 	})
 
 	return set
@@ -62,16 +62,10 @@ func (c *MonitorCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *MonitorCommand) Run(args []string) int {
-	f := c.Flags()
-
-	if err := f.Parse(args); err != nil {
+	if err := c.Flags().Parse(args); err != nil {
 		c.UI.Error(err.Error())
 		return 1
 	}
-
-	args = f.Args()
-	fmt.Println("args")
-	fmt.Println(args)
 
 	client, err := c.Client()
 	if err != nil {
@@ -84,9 +78,7 @@ func (c *MonitorCommand) Run(args []string) int {
 	defer close(stopCh)
 
 START:
-	// TODO: fix this so I can pass query options for log level
-	//logCh, err = client.Sys().Monitor("INFO", false, eventDoneCh, nil)
-	logCh, err = client.Sys().Monitor("INFO", false, stopCh, false)
+	logCh, err = client.Sys().Monitor(c.logLevel, stopCh)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error starting monitor: %s", err))
 		return 1

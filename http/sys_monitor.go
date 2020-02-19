@@ -34,9 +34,6 @@ func handleSysMonitor(core *vault.Core) http.Handler {
 		})
 
 		logCh := monitor.Start()
-		defer monitor.Stop()
-		//errCh := make(chan error, 2)
-
 		w.WriteHeader(http.StatusOK)
 
 		// 0 byte write is needed before the Flush call so that if we are using

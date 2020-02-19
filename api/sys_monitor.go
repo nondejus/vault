@@ -2,20 +2,17 @@ package api
 
 import (
 	"bufio"
-	//"bytes"
 	"context"
-	//"encoding/json"
-	//"fmt"
-	//log "github.com/hashicorp/go-hclog"
-	//"os"
-	//"time"
 )
 
-//func (c *Sys) Monitor(loglevel string, logJSON bool, stopCh <-chan struct{}, q *QueryOptions) (chan string, error) {
-// TODO: this function should _maybe_ return an error channel, to notify if the server fails somehow
-func (c *Sys) Monitor(loglevel string, logJSON bool, stopCh chan struct{}, q bool) (chan string, error) {
+func (c *Sys) Monitor(logLevel string, stopCh chan struct{}) (chan string, error) {
 	r := c.c.NewRequest("GET", "/v1/sys/monitor")
-	// TODO: I need to set the query options here
+
+	if logLevel == "" {
+		r.Params.Add("log_level", "INFO")
+	} else {
+		r.Params.Add("log_level", logLevel)
+	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	resp, err := c.c.RawRequestWithContext(ctx, r)
