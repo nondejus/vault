@@ -77,6 +77,10 @@ func (c *MonitorCommand) Run(args []string) int {
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 
+	// Receiving input on stopCh means either the API client
+	// was stopped on purpose, or (more likely) the context
+	// deadline expired. If that happens, we want to restart
+	// this process.
 START:
 	logCh, err = client.Sys().Monitor(c.logLevel, stopCh)
 	if err != nil {
